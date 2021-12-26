@@ -1,0 +1,17 @@
+version: "3.9"
+networks:
+  arvanCloud:
+    name: arvanCloud
+services:
+  app:
+    build:
+      context: .
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: arvanCloudApp
+    working_dir: /var/www/html
+    networks:
+      - arvanCloud
+    volumes:
+      - ./src:/var/www/html
