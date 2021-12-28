@@ -111,7 +111,7 @@ class ChargeTest extends TestCase
         $user    = User::factory()->admin()->create();
         $voucher = Voucher::factory()->charge()->started()->expiresAtFuture()->create();
         $this->actingAs($user)->json('post', route('vouchers.charge'), ['code' => $voucher->code])->assertOk();
-        $this->assertEquals($user->balance, $voucher->amount);
+        $this->assertEquals($user->refresh()->balance, $voucher->amount);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Services\Wallet;
 use App\Models\Transaction;
 use App\Models\User;
 use Auth;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class TransactionService
@@ -21,18 +22,19 @@ class TransactionService
      */
     public function deposit(int $amount, array $meta = [], bool $confirmed = true): Transaction
     {
-        $user = $this->getUser();
-        if ($confirmed) {
-            $user->balance += $amount;
-            $user->save();
-        }
-        return $user->transactions()
-            ->create([
-                'amount'    => $amount,
-                'type'      => 'deposit',
-                'confirmed' => $confirmed,
-                'meta'      => $meta
-            ]);
+        return DB::transaction(function () use ($amount, $meta, $confirmed) {
+            $user = $this->getUser();
+            if ($confirmed) {
+                $user->lockForUpdate()->increment('balance', $amount);
+            }
+            return $user->transactions()
+                ->create([
+                    'amount'    => $amount,
+                    'type'      => 'deposit',
+                    'confirmed' => $confirmed,
+                    'meta'      => $meta
+                ]);
+        });
     }
 
     /**
@@ -54,19 +56,20 @@ class TransactionService
      */
     public function withdraw(int $amount, array $meta = [], bool $shouldConfirmed = false): Transaction
     {
-        $user      = $this->getUser();
-        $confirmed = $shouldConfirmed || $user->canWithdraw($amount);
-        if ($confirmed) {
-            $user->balance -= $amount;
-            $user->save();
-        }
-        return $user->transactions()
-            ->create([
-                'amount'    => $amount,
-                'type'      => 'withdraw',
-                'confirmed' => $confirmed,
-                'meta'      => $meta
-            ]);
+        return DB::transaction(function () use ($amount, $meta, $shouldConfirmed) {
+            $user      = $this->getUser();
+            $confirmed = $shouldConfirmed || $user->canWithdraw($amount);
+            if ($confirmed) {
+                $user->lockForUpdate()->decrement('balance', $amount);
+            }
+            return $user->transactions()
+                ->create([
+                    'amount'    => $amount,
+                    'type'      => 'withdraw',
+                    'confirmed' => $confirmed,
+                    'meta'      => $meta
+                ]);
+        });
     }
 
     /**

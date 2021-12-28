@@ -19,7 +19,7 @@ class TransactionServiceTest extends TestCase
         /** @var \App\Models\Transaction $transaction */
         $transaction = $user->transactions()->first();
         $this->assertEquals(100, $transaction->amount);
-        $this->assertEquals(100, $user->balance);
+        $this->assertEquals(100, $user->refresh()->balance);
         $this->assertEquals(Transaction::DEPOSIT_TYPE, $transaction->type);
         $this->assertTrue($transaction->confirmed);
     }
@@ -65,7 +65,7 @@ class TransactionServiceTest extends TestCase
         /** @var \App\Models\Transaction $transaction */
         $transaction = $user->transactions()->first();
         $this->assertEquals(100, $transaction->amount);
-        $this->assertEquals(0, $user->balance);
+        $this->assertEquals(0, $user->refresh()->balance);
         $this->assertEquals(Transaction::WITHDRAW_TYPE, $transaction->type);
         $this->assertTrue($transaction->confirmed);
     }
@@ -80,7 +80,7 @@ class TransactionServiceTest extends TestCase
         /** @var \App\Models\Transaction $transaction */
         $transaction = $user->transactions()->first();
         $this->assertEquals(100, $transaction->amount);
-        $this->assertEquals(-100, $user->balance);
+        $this->assertEquals(-100, $user->refresh()->balance);
         $this->assertEquals(Transaction::WITHDRAW_TYPE, $transaction->type);
         $this->assertTrue($transaction->confirmed);
     }

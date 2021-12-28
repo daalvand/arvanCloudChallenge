@@ -56,7 +56,7 @@ class VoucherService
     {
         $voucher = Voucher::query()->where('code', $code)->firstOrFail();
         DB::transaction(function () use ($voucher, $user) {
-            $voucher->increment('used_count');
+            $voucher->lockForUpdate()->increment('used_count');
             $user->redeemedVouchers()->attach($voucher->id, ['redeemed_at' => now()]);
         });
         ChargeVoucher::dispatch($user, $voucher);
